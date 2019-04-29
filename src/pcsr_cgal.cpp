@@ -1,9 +1,154 @@
 
 #include <pcsr/pcsr_cgal.h>
 #include <CGAL/poisson_surface_reconstruction.h>
+#include <CGAL/wlop_simplify_and_regularize_point_set.h>
+#include <CGAL/jet_estimate_normals.h>
+#include <CGAL/mst_orient_normals.h>
+#include <CGAL/property_map.h>
+
+#include <vector>
+#include <fstream>
+#include <iostream>
+// types
+typedef CGAL::Simple_cartesian<double> Kernel;
+typedef Kernel::Point_3 Point;
 
 namespace pcsr
 {
+
+CgalPointSetProcessor::Point3StlVecPtr
+CgalPointSetProcessor::to_point3(const PointStlVec & coordinate)
+{
+    Point3StlVecPtr point3(new Point3StlVec());
+    for (auto cit = coordinate.begin(); cit != coordinate.end(); ++cit)
+    {
+        const Point3 p((*cit)[0], (*cit)[1], (*cit)[2]);
+        point3->push_back(p);
+    }
+    return point3;
+}
+
+CgalPointSetProcessor::PwnStlVecPtr
+CgalPointSetProcessor::to_pwn(const PointStlVec & coordinate, const VectorStlVec & normal)
+{
+    PwnStlVecPtr pwn(new PwnStlVec());
+    auto cit = coordinate.begin();
+    auto nit = normal.begin();
+    for (; cit != coordinate.end() && nit != normal.end(); ++cit, ++nit)
+    {
+        const Point3 p((*cit)[0], (*cit)[1], (*cit)[2]);
+        const Vector3 n((*nit)[0], (*nit)[1], (*nit)[2]);
+        pwn->push_back(Pwn(p, n));
+    }
+    return pwn;
+}
+
+CgalPointSetProcessor::PwnStlVecPtr
+CgalPointSetProcessor::to_pwn(const Point3StlVec & coordinate)
+{
+    PwnStlVecPtr pwn(new PwnStlVec());
+    const Vector3 n(0.0, 0.0, 0.0);
+    for (auto cit = coordinate.begin(); cit != coordinate.end(); ++cit)
+    {
+        const Point3 p((*cit)[0], (*cit)[1], (*cit)[2]);
+        pwn->push_back(Pwn(p, n));
+    }
+    return pwn;
+}
+
+PointVectorStlVecPair
+CgalPointSetProcessor::from_pwn(const PwnStlVec & pwn)
+{
+    PointVectorStlVecPair pvp(PointStlVecPtr(new PointStlVec()), VectorStlVecPtr(new VectorStlVec()));
+    for (auto pit = pwn.begin(); pit != pwn.end(); ++pit)
+    {
+        Point p;
+        Vector n;
+        for (std::size_t j = 0; j < 3; ++j)
+        {
+            p[j] = pit->first[j];
+            n[j] = pit->second[j];
+        }
+        pvp.first->push_back(p);
+        pvp.second->push_back(n);
+    }
+    return pvp;
+}
+
+CgalPointSetProcessor::PwnStlVecPtr
+CgalPointSetProcessor::jet_estimate_normals(
+    const Point3StlVec & coordinate,
+    std::size_t k,
+    std::size_t degree_fitting
+)
+{
+    PwnStlVecPtr pwn(to_pwn(coordinate));
+    CGAL::jet_estimate_normals<Concurrency_tag>(
+        *pwn,
+        k,
+        CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
+        normal_map(CGAL::Second_of_pair_property_map<Pwn>()).
+        degree_fitting(degree_fitting)
+    );
+    return pwn;
+}
+
+CgalPointSetProcessor::PwnStlVec::iterator
+CgalPointSetProcessor::mst_orient_normals(
+    PwnStlVec & pwn,
+    std::size_t k
+)
+{
+    return
+        CGAL::mst_orient_normals(
+            pwn,
+            k,
+            CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
+            normal_map(CGAL::Second_of_pair_property_map<Pwn>())
+        );
+}
+
+/* ========================================================================= */
+
+CgalWlopPointSetRegularizer::CgalWlopPointSetRegularizer(
+    const double sp,
+    const double nr
+): Inherited(),
+   select_percentage(sp),
+   neighbour_radius(nr)
+{
+
+}
+
+CgalWlopPointSetRegularizer::Point3StlVecPtr
+CgalWlopPointSetRegularizer::regularize(Point3StlVec & coordinate) const
+{
+    Point3StlVecPtr output(new Point3StlVec());
+    CGAL::wlop_simplify_and_regularize_point_set<Concurrency_tag>(
+        coordinate,
+        std::back_inserter(*output),
+        CGAL::parameters::select_percentage(this->select_percentage).
+        neighbor_radius(this->neighbour_radius)
+    );
+    return output;
+}
+
+PointVectorStlVecPair
+CgalWlopPointSetRegularizer::regularize(const PointStlVec & coordinate) const
+{
+    Point3StlVecPtr points = this->to_point3(coordinate);
+    points = this->regularize(*points);
+    std::size_t num_neighbs = 18;
+    PwnStlVecPtr pwn(this->jet_estimate_normals(*points, num_neighbs));
+    points.reset();
+    this->mst_orient_normals(*pwn, num_neighbs);
+
+    PointVectorStlVecPair pointsNormalsPair(this->from_pwn(*pwn));
+    pwn.reset();
+    return pointsNormalsPair;
+}
+
+/* ========================================================================= */
 
 CgalPoissonSurfaceReconstructor::PolyhedronPtr
 CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points) const
@@ -43,17 +188,10 @@ CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points)
 TriMeshPair
 CgalPoissonSurfaceReconstructor::reconstruct(const PointStlVec & coordinate, const VectorStlVec & normal) const
 {
-    PwnStlVec points;
-    auto cit = coordinate.begin();
-    auto nit = normal.begin();
-    for (; cit != coordinate.end() && nit != normal.end(); ++cit, ++nit)
-    {
-        const Point3 p((*cit)[0], (*cit)[1], (*cit)[2]);
-        const Vector3 n((*nit)[0], (*nit)[1], (*nit)[2]);
-        points.push_back(Pwn(p, n));
-    }
+    PwnStlVecPtr pwnPtr(this->to_pwn(coordinate, normal));
     PolyhedronPtr polyPtr;
-    polyPtr = this->reconstructPolyhedron(points);
+    polyPtr = this->reconstructPolyhedron(*pwnPtr);
+    pwnPtr.reset();
 
     PointStlVecPtr pointsPtr(new PointStlVec());
     TriFaceStlVecPtr triFacesPtr(new TriFaceStlVec());
