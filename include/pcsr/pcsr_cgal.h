@@ -67,7 +67,11 @@ public:
 
     CgalWlopPointSetRegularizer(
         const double select_percentage=10.0,
-        const double neighbour_radius=-1.0
+        const double neighbour_radius=-1.0,
+        std::size_t number_of_iterations=32,
+        bool require_uniform_sampling=false,
+        std::size_t num_neighbours=18,
+        std::size_t jet_degree_fitting=2
     );
 
     Point3StlVecPtr regularize(Point3StlVec & coordinate) const;
@@ -76,6 +80,11 @@ public:
 
     double select_percentage;
     double neighbour_radius;
+    std::size_t number_of_iterations;
+    bool require_uniform_sampling;
+    std::size_t num_neighbours;
+    std::size_t jet_degree_fitting;
+
 };
 
 class CgalPoissonSurfaceReconstructor: public CgalPointSetProcessor

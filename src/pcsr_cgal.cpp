@@ -112,12 +112,19 @@ CgalPointSetProcessor::mst_orient_normals(
 
 CgalWlopPointSetRegularizer::CgalWlopPointSetRegularizer(
     const double sp,
-    const double nr
+    const double nr,
+    std::size_t noi,
+    bool rus,
+    std::size_t nn,
+    std::size_t jdf
 ): Inherited(),
    select_percentage(sp),
-   neighbour_radius(nr)
+   neighbour_radius(nr),
+   number_of_iterations(noi),
+   require_uniform_sampling(rus),
+   num_neighbours(nn),
+   jet_degree_fitting(jdf)
 {
-
 }
 
 CgalWlopPointSetRegularizer::Point3StlVecPtr
@@ -128,7 +135,9 @@ CgalWlopPointSetRegularizer::regularize(Point3StlVec & coordinate) const
         coordinate,
         std::back_inserter(*output),
         CGAL::parameters::select_percentage(this->select_percentage).
-        neighbor_radius(this->neighbour_radius)
+        neighbor_radius(this->neighbour_radius).
+        number_of_iterations(this->number_of_iterations).
+        require_uniform_sampling(this->require_uniform_sampling)
     );
     return output;
 }
@@ -138,8 +147,15 @@ CgalWlopPointSetRegularizer::regularize(const PointStlVec & coordinate) const
 {
     Point3StlVecPtr points = this->to_point3(coordinate);
     points = this->regularize(*points);
-    std::size_t num_neighbs = 18;
-    PwnStlVecPtr pwn(this->jet_estimate_normals(*points, num_neighbs));
+    const std::size_t num_neighbs = this->num_neighbours;
+    PwnStlVecPtr
+        pwn(
+            this->jet_estimate_normals(
+                *points,
+                num_neighbs,
+                this->jet_degree_fitting
+            )
+        );
     points.reset();
     this->mst_orient_normals(*pwn, num_neighbs);
 
