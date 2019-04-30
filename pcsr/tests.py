@@ -41,6 +41,16 @@ class CgalPoissonSurfaceReconTest(SurfaceReconTest):
     Tests for :func:`pcsr.cgal_poisson_reconstruct`.
     """
 
+    def export_mesh(self, mesh, file_name):
+        """
+        """
+        import trimesh
+        if hasattr(trimesh, "io"):
+            from trimesh.io.export import export_mesh
+        else:
+            from trimesh.exchange.export import export_mesh
+        export_mesh(mesh, file_name)
+
     @_unittest.skipUnless(
         have_trimesh,
         "Could not import trimesh module for mesh/point-cloud generation."
@@ -51,13 +61,12 @@ class CgalPoissonSurfaceReconTest(SurfaceReconTest):
         """
         from trimesh.sample import sample_surface_even
         from trimesh.proximity import closest_point
-        from trimesh.io.export import export_mesh
 
         from ._pcsr import _cgal_poisson_reconstruct
 
         print("Generating point cloud...")
         mesh = self.unit_cube_mesh
-        # export_mesh(mesh, "mesh.ply")
+        # self.export_mesh(mesh, "mesh.ply")
         points, fidx = sample_surface_even(mesh, 100000)
         normals = -mesh.face_normals[fidx]
 
@@ -66,7 +75,7 @@ class CgalPoissonSurfaceReconTest(SurfaceReconTest):
         print("vertices=\n%s" % vertices)
         print("faces=\n%s" % faces)
         recon_mesh = _trimesh.Trimesh(vertices=vertices, faces=faces)
-        # export_mesh(recon_mesh, "mesh_recon.ply")
+        # self.export_mesh(recon_mesh, "mesh_recon.ply")
         c, d, fidx2 = closest_point(mesh, vertices)
         self.assertTrue(
             _np.allclose(0, d, atol=0.05)
