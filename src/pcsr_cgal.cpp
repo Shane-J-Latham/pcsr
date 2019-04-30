@@ -1,10 +1,13 @@
 
 #include <pcsr/pcsr_cgal.h>
-#include <CGAL/poisson_surface_reconstruction.h>
-#include <CGAL/wlop_simplify_and_regularize_point_set.h>
+#include <CGAL/bilateral_smooth_point_set.h>
 #include <CGAL/jet_estimate_normals.h>
+#include <CGAL/jet_smooth_point_set.h>
 #include <CGAL/mst_orient_normals.h>
+#include <CGAL/pca_estimate_normals.h>
+#include <CGAL/poisson_surface_reconstruction.h>
 #include <CGAL/property_map.h>
+#include <CGAL/wlop_simplify_and_regularize_point_set.h>
 
 #include <vector>
 #include <fstream>
@@ -75,6 +78,22 @@ CgalPointSetProcessor::from_pwn(const PwnStlVec & pwn)
     return pvp;
 }
 
+void
+CgalPointSetProcessor::jet_estimate_normals(
+    PwnStlVec & pwn,
+    std::size_t k,
+    std::size_t degree_fitting
+)
+{
+    CGAL::jet_estimate_normals<Concurrency_tag>(
+        pwn,
+        k,
+        CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
+        normal_map(CGAL::Second_of_pair_property_map<Pwn>()).
+        degree_fitting(degree_fitting)
+    );
+}
+
 CgalPointSetProcessor::PwnStlVecPtr
 CgalPointSetProcessor::jet_estimate_normals(
     const Point3StlVec & coordinate,
@@ -83,12 +102,22 @@ CgalPointSetProcessor::jet_estimate_normals(
 )
 {
     PwnStlVecPtr pwn(to_pwn(coordinate));
-    CGAL::jet_estimate_normals<Concurrency_tag>(
+    jet_estimate_normals(*pwn);
+    return pwn;
+}
+
+CgalPointSetProcessor::PwnStlVecPtr
+CgalPointSetProcessor::pca_estimate_normals(
+    const Point3StlVec & coordinate,
+    std::size_t k
+)
+{
+    PwnStlVecPtr pwn(to_pwn(coordinate));
+    CGAL::pca_estimate_normals<Concurrency_tag>(
         *pwn,
         k,
         CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
-        normal_map(CGAL::Second_of_pair_property_map<Pwn>()).
-        degree_fitting(degree_fitting)
+        normal_map(CGAL::Second_of_pair_property_map<Pwn>())
     );
     return pwn;
 }
@@ -106,6 +135,108 @@ CgalPointSetProcessor::mst_orient_normals(
             CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
             normal_map(CGAL::Second_of_pair_property_map<Pwn>())
         );
+}
+
+/* ========================================================================= */
+
+CgalJetPointSetSmoother::CgalJetPointSetSmoother(
+    std::size_t nn,
+    std::size_t jdf,
+    std::size_t dm
+): Inherited(),
+   num_neighbours(nn),
+   jet_degree_fitting(jdf),
+   degree_monge(dm)
+{
+}
+
+void
+CgalJetPointSetSmoother::smooth(Point3StlVec & coordinate) const
+{
+    CGAL::jet_smooth_point_set<Concurrency_tag>(
+        coordinate,
+        this->num_neighbours,
+        CGAL::parameters::degree_fitting(this->jet_degree_fitting).
+        degree_monge(this->degree_monge)
+    );
+}
+
+PointVectorStlVecPair
+CgalJetPointSetSmoother::smooth(const PointStlVec & coordinate) const
+{
+    Point3StlVecPtr points(this->to_point3(coordinate));
+    this->smooth(*points);
+    const std::size_t num_neighbs = this->num_neighbours;
+    PwnStlVecPtr
+        pwn(
+            this->jet_estimate_normals(
+                *points,
+                num_neighbs,
+                this->jet_degree_fitting
+            )
+        );
+    points.reset();
+    this->mst_orient_normals(*pwn, num_neighbs);
+
+    PointVectorStlVecPair pointsNormalsPair(this->from_pwn(*pwn));
+    pwn.reset();
+    return pointsNormalsPair;
+}
+
+/* ========================================================================= */
+
+CgalBilateralPointSetSmoother::CgalBilateralPointSetSmoother(
+    std::size_t nn,
+    double sa,
+    std::size_t jdf
+): Inherited(),
+   num_neighbours(nn),
+   sharpness_angle(sa),
+   jet_degree_fitting(jdf)
+{
+}
+
+void
+CgalBilateralPointSetSmoother::smooth(PwnStlVec & pwn) const
+{
+    CGAL::bilateral_smooth_point_set<Concurrency_tag>(
+        pwn,
+        this->num_neighbours,
+        CGAL::parameters::point_map(CGAL::First_of_pair_property_map<Pwn>()).
+         normal_map(CGAL::Second_of_pair_property_map<Pwn>()).
+         sharpness_angle(this->sharpness_angle)
+    );
+}
+
+PointVectorStlVecPair
+CgalBilateralPointSetSmoother::smooth(const PointStlVec & coordinate) const
+{
+    const std::size_t num_neighbs = this->num_neighbours;
+    Point3StlVecPtr points(this->to_point3(coordinate));
+    std::cout << "Smoothing..." << std::endl;
+    PwnStlVecPtr
+        pwn(
+            this->jet_estimate_normals(
+                *points,
+                num_neighbs,
+                this->jet_degree_fitting
+            )
+        );
+    this->mst_orient_normals(*pwn, num_neighbs);
+    points.reset();
+    this->smooth(*pwn);
+    std::cout << "Estimating normals..." << std::endl;
+    this->jet_estimate_normals(
+        *pwn,
+        num_neighbs,
+        this->jet_degree_fitting
+    );
+    std::cout << "Orienting normals..." << std::endl;
+    this->mst_orient_normals(*pwn, num_neighbs);
+
+    PointVectorStlVecPair pointsNormalsPair(this->from_pwn(*pwn));
+    pwn.reset();
+    return pointsNormalsPair;
 }
 
 /* ========================================================================= */
@@ -145,7 +276,7 @@ CgalWlopPointSetRegularizer::regularize(Point3StlVec & coordinate) const
 PointVectorStlVecPair
 CgalWlopPointSetRegularizer::regularize(const PointStlVec & coordinate) const
 {
-    Point3StlVecPtr points = this->to_point3(coordinate);
+    Point3StlVecPtr points(this->to_point3(coordinate));
     points = this->regularize(*points);
     const std::size_t num_neighbs = this->num_neighbours;
     PwnStlVecPtr

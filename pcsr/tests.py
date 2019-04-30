@@ -73,7 +73,7 @@ def export_point_cloud(
     )
     del writer, points, np_points, vtk_ug
 
-class SurfaceReconTest(_unittest.TestCase):
+class PointSetTest(_unittest.TestCase):
 
     """
     Base class for surface reconstruction.
@@ -82,24 +82,26 @@ class SurfaceReconTest(_unittest.TestCase):
     def export_point_set(self, file_name, points, normals=None):
         """
         """
-        dtyp = [("coordinate", (_np.float64, 3)), ]
-        if normals is not None:
-            dtyp.append(("normal", (_np.float64, 3)))
-        point_cloud_ary = _np.zeros((points.shape[0],), dtype=dtyp)
-        point_cloud_ary["coordinate"] = points
-        if normals is not None:
-            point_cloud_ary["normal"] = normals
-        export_point_cloud(file_name, point_cloud_ary)
+        if self.do_export_files:
+            dtyp = [("coordinate", (_np.float64, 3)), ]
+            if normals is not None:
+                dtyp.append(("normal", (_np.float64, 3)))
+            point_cloud_ary = _np.zeros((points.shape[0],), dtype=dtyp)
+            point_cloud_ary["coordinate"] = points
+            if normals is not None:
+                point_cloud_ary["normal"] = normals
+            export_point_cloud(file_name, point_cloud_ary)
 
     def export_mesh(self, file_name, mesh):
         """
         """
-        import trimesh
-        if hasattr(trimesh, "io"):
-            from trimesh.io.export import export_mesh
-        else:
-            from trimesh.exchange.export import export_mesh
-        export_mesh(mesh, file_name)
+        if self.do_export_files:
+            import trimesh
+            if hasattr(trimesh, "io"):
+                from trimesh.io.export import export_mesh
+            else:
+                from trimesh.exchange.export import export_mesh
+            export_mesh(mesh, file_name)
 
 
     def setUp(self):
@@ -110,6 +112,7 @@ class SurfaceReconTest(_unittest.TestCase):
 
         _np.random.seed(54317953)
 
+        self.do_export_files = False
         if have_trimesh:
             self.cow_mesh = copy.deepcopy(models.cow())
             # scale the mesh to fit inside the image volume.
@@ -119,24 +122,13 @@ class SurfaceReconTest(_unittest.TestCase):
 
             self.unit_cube_mesh = copy.deepcopy(models.unit_cube())
 
-class CgalWlopRegularizationTest(SurfaceReconTest):
-
+class DenoisePointSetTest(PointSetTest):
     """
-    Tests for :func:`pcsr.cgal_poisson_reconstruct`.
     """
-
-    @_unittest.skipUnless(
-        have_trimesh,
-        "Could not import trimesh module for mesh/point-cloud generation."
-    )
-    def test_regularize(self):
+    def create_noisey_point_set(self):
         """
-        Unit-test for :func:`pcsr.cgal_wlop_regularize`.
         """
         from trimesh.sample import sample_surface_even
-        from trimesh.proximity import closest_point
-
-        from . import cgal_wlop_regularize
 
         print("Generating point cloud...")
         mesh = self.unit_cube_mesh
@@ -152,6 +144,108 @@ class CgalWlopRegularizationTest(SurfaceReconTest):
         self.export_point_set("mesh_points.vtu", points)
         points += _np.random.normal(loc=0.0, scale=g_sigma, size=points.shape)
         self.export_point_set("mesh_points_noise.vtu", points)
+
+        return mesh, points
+
+class CgalJetSmoothTest(DenoisePointSetTest):
+
+    """
+    Tests for :func:`pcsr.cgal_jet_smooth`.
+    """
+
+    @_unittest.skipUnless(
+        have_trimesh,
+        "Could not import trimesh module for mesh/point-cloud generation."
+    )
+    def test_smooth(self):
+        """
+        Unit-test for :func:`pcsr.cgal_jet_smooth`.
+        """
+        from trimesh.proximity import closest_point
+
+        from . import cgal_jet_smooth
+
+        self.do_export_files = True
+
+        mesh, points = self.create_noisey_point_set()
+
+        pts = points
+        for i in range(3):
+            print("Calling CGAL Jet smoothing...")
+            pts, nrms = \
+                cgal_jet_smooth(
+                    pts,
+                    num_neighbours=200
+                )
+            self.export_point_set("mesh_points_noise_jet_smoothed_%02d.vtu" % i, pts, nrms)
+        print("pts=\n%s" % pts)
+        print("nrms=\n%s" % nrms)
+        c, d, fidx2 = closest_point(mesh, pts)
+        self.assertTrue(
+            _np.allclose(0, d, atol=0.25)
+        )
+
+class CgalBilateralSmoothTest(DenoisePointSetTest):
+
+    """
+    Tests for :func:`pcsr.cgal_bilateral_smooth`.
+    """
+
+    @_unittest.skipUnless(
+        have_trimesh,
+        "Could not import trimesh module for mesh/point-cloud generation."
+    )
+    def test_smooth(self):
+        """
+        Unit-test for :func:`pcsr.cgal_bilateral_smooth`.
+        """
+        from trimesh.proximity import closest_point
+
+        from . import cgal_bilateral_smooth
+
+        self.do_export_files = True
+
+        mesh, points = self.create_noisey_point_set()
+
+        pts = points
+        for i in range(6):
+            print("Calling CGAL Bilateral smoothing...")
+            print("pts=\n%s" % pts)
+            pts, nrms = \
+                cgal_bilateral_smooth(
+                    pts,
+                    num_neighbours=200,
+                    sharpness_angle=45.0
+                )
+            self.export_point_set("mesh_points_noise_blt_smoothed_%02d.vtu" % i, pts, nrms)
+            print("pts=\n%s" % pts)
+            print("nrms=\n%s" % nrms)
+        c, d, fidx2 = closest_point(mesh, pts)
+        self.assertTrue(
+            _np.allclose(0, d, atol=0.25)
+        )
+
+class CgalWlopRegularizationTest(DenoisePointSetTest):
+
+    """
+    Tests for :func:`pcsr.cgal_poisson_reconstruct`.
+    """
+
+    @_unittest.skipUnless(
+        have_trimesh,
+        "Could not import trimesh module for mesh/point-cloud generation."
+    )
+    def test_regularize(self):
+        """
+        Unit-test for :func:`pcsr.cgal_wlop_regularize`.
+        """
+        from trimesh.proximity import closest_point
+
+        from . import cgal_wlop_regularize
+
+        self.do_export_files = True
+
+        mesh, points = self.create_noisey_point_set()
 
         print("Calling CGAL WLOP regularization...")
         pts, nrms = \
@@ -169,7 +263,7 @@ class CgalWlopRegularizationTest(SurfaceReconTest):
             _np.allclose(0, d, atol=0.25)
         )
 
-class CgalPoissonSurfaceReconTest(SurfaceReconTest):
+class CgalPoissonSurfaceReconTest(PointSetTest):
 
     """
     Tests for :func:`pcsr.cgal_poisson_reconstruct`.

@@ -38,6 +38,14 @@ public:
     static PointVectorStlVecPair from_pwn(const PwnStlVec & pwn);
 
     static
+    void
+    jet_estimate_normals(
+        PwnStlVec & pwn,
+        std::size_t k = 18,
+        std::size_t degree_fitting = 2
+    );
+
+    static
     PwnStlVecPtr
     jet_estimate_normals(
         const Point3StlVec & coordinate,
@@ -46,11 +54,72 @@ public:
     );
 
     static
+    PwnStlVecPtr
+    pca_estimate_normals(
+        const Point3StlVec & coordinate,
+        std::size_t k = 18
+    );
+
+    static
     PwnStlVec::iterator
     mst_orient_normals(
         PwnStlVec & pwn,
         std::size_t k = 18
     );
+};
+
+class CgalJetPointSetSmoother: public CgalPointSetProcessor
+{
+public:
+    // Types
+    typedef CgalPointSetProcessor Inherited;
+    using Inherited::Kernel;
+    using Inherited::Point3;
+    using Inherited::Vector3;
+    using Inherited::Pwn;
+    using Inherited::PwnStlVec;
+    using Inherited::PwnStlVecPtr;
+
+    CgalJetPointSetSmoother(
+        std::size_t num_neighbours=18,
+        std::size_t jet_degree_fitting=2,
+        std::size_t degree_monge=2
+    );
+
+    void smooth(Point3StlVec & coordinate) const;
+
+    PointVectorStlVecPair smooth(const PointStlVec & coordinate) const;
+
+    std::size_t num_neighbours;
+    std::size_t jet_degree_fitting;
+    std::size_t degree_monge;
+};
+
+class CgalBilateralPointSetSmoother: public CgalPointSetProcessor
+{
+public:
+    // Types
+    typedef CgalPointSetProcessor Inherited;
+    using Inherited::Kernel;
+    using Inherited::Point3;
+    using Inherited::Vector3;
+    using Inherited::Pwn;
+    using Inherited::PwnStlVec;
+    using Inherited::PwnStlVecPtr;
+
+    CgalBilateralPointSetSmoother(
+        std::size_t num_neighbours=18,
+        double sharpness_angle=25.0,
+        std::size_t jet_degree_fitting=2
+    );
+
+    void smooth(PwnStlVec & coordinate) const;
+
+    PointVectorStlVecPair smooth(const PointStlVec & coordinate) const;
+
+    std::size_t num_neighbours;
+    double sharpness_angle;
+    std::size_t jet_degree_fitting;
 };
 
 class CgalWlopPointSetRegularizer: public CgalPointSetProcessor
