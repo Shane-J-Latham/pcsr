@@ -28,7 +28,8 @@ CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points)
             0.5 * average_spacing,
             sm_angle,
             sm_radius,
-            sm_distance
+            sm_distance,
+            CGAL::Non_manifold_tag()
         )
     )
     {
