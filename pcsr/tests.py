@@ -134,15 +134,11 @@ class DenoisePointSetTest(PointSetTest):
         mesh = self.unit_cube_mesh
         self.export_mesh("mesh.ply", mesh)
         g_sigma = 0.035
-        points, fidx = sample_surface_even(mesh, 10000)
-        for i in range(10):
-            pts, fi = sample_surface_even(mesh, 10000)
-            points = _np.vstack((points, pts))
-            fidx = _np.hstack((fidx, fi))
-            del pts, fi
+        points, fidx = sample_surface_even(mesh, 50000)
+        normals = normals = mesh.face_normals[fidx]
 
         self.export_point_set("mesh_points.vtu", points)
-        points += _np.random.normal(loc=0.0, scale=g_sigma, size=points.shape)
+        points += _np.random.normal(loc=0.0, scale=g_sigma, size=(points.shape[0], 1)) * normals
         self.export_point_set("mesh_points_noise.vtu", points)
 
         return mesh, points
@@ -165,7 +161,7 @@ class CgalJetSmoothTest(DenoisePointSetTest):
 
         from . import cgal_jet_smooth
 
-        self.do_export_files = True
+        self.do_export_files = False
 
         mesh, points = self.create_noisey_point_set()
 
@@ -203,7 +199,7 @@ class CgalBilateralSmoothTest(DenoisePointSetTest):
 
         from . import cgal_bilateral_smooth
 
-        self.do_export_files = True
+        self.do_export_files = False
 
         mesh, points = self.create_noisey_point_set()
 
@@ -243,7 +239,7 @@ class CgalWlopRegularizationTest(DenoisePointSetTest):
 
         from . import cgal_wlop_regularize
 
-        self.do_export_files = True
+        self.do_export_files = False
 
         mesh, points = self.create_noisey_point_set()
 
@@ -251,8 +247,8 @@ class CgalWlopRegularizationTest(DenoisePointSetTest):
         pts, nrms = \
             cgal_wlop_regularize(
                 points,
-                select_percentage=25.0,
-                neighbour_radius=0.5,
+                select_percentage=50.0,
+                neighbour_radius=0.35,
                 number_of_iterations=35
             )
         self.export_point_set("mesh_points_noise_regularized.vtu", pts, nrms)
@@ -296,7 +292,7 @@ class CgalPoissonSurfaceReconTest(PointSetTest):
         mesh = self.unit_cube_mesh
         # self.export_mesh("mesh.ply", mesh)
         points, fidx = sample_surface_even(mesh, 100000)
-        normals = -mesh.face_normals[fidx]
+        normals = mesh.face_normals[fidx]
 
         print("Calling CGAL Poisson surface reconstruction...")
         vertices, faces = cgal_poisson_reconstruct(points, normals)
