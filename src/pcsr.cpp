@@ -97,6 +97,19 @@ trimeshpair_to_tuple(const TriMeshPair & meshPair)
     return boost::python::make_tuple(pointsObj, facesObj);
 }
 
+boost::python::object
+points_normal_pair_to_tuple(const PointVectorStlVecPair & pointNormalPair)
+{
+    PointStlVecPtr points;
+    VectorStlVecPtr normals;
+    points = pointNormalPair.first;
+    normals = pointNormalPair.second;
+    boost::python::object pointsObj(stlvec_to_array(*points));
+    boost::python::object normalsObj(stlvec_to_array(*normals));
+
+    return boost::python::make_tuple(pointsObj, normalsObj);
+}
+
 boost::python::object cgal_poisson_reconstruct(
     boost::python::object coordinate,
     boost::python::object normal
@@ -120,6 +133,90 @@ boost::python::object cgal_poisson_reconstruct(
     return verticesFacesTuple;
 }
 
+boost::python::object cgal_jet_smooth(
+    boost::python::object coordinate,
+    std::size_t num_neighbours=64,
+    std::size_t jet_degree_fitting=2,
+    std::size_t degree_monge=2
+)
+{
+    std::cout << "Converting numpy array to STL vectors..." << std::endl;
+    PointStlVecPtr points(array_to_points(coordinate));
+
+    boost::python::object coordinatesNormalsTuple;
+    {
+        std::cout << "Jet smoothing point set..." << std::endl;
+        CgalJetPointSetSmoother smoother;
+        smoother.num_neighbours = num_neighbours;
+        smoother.jet_degree_fitting = jet_degree_fitting;
+        smoother.degree_monge = degree_monge;
+        PointVectorStlVecPair pointsNormalsPair(smoother.smooth(*points));
+        points.reset();
+        std::cout << "Converting mesh STL vectors to numpy array tuple..." << std::endl;
+        coordinatesNormalsTuple = points_normal_pair_to_tuple(pointsNormalsPair);
+    }
+
+    return coordinatesNormalsTuple;
+}
+
+boost::python::object cgal_bilateral_smooth(
+    boost::python::object coordinate,
+    std::size_t num_neighbours=64,
+    double sharpness_angle=25.0,
+    std::size_t jet_degree_fitting=2
+)
+{
+    std::cout << "Converting numpy array to STL vectors..." << std::endl;
+    PointStlVecPtr points(array_to_points(coordinate));
+
+    boost::python::object coordinatesNormalsTuple;
+    {
+        std::cout << "Bilateral smoothing point set..." << std::endl;
+        CgalBilateralPointSetSmoother smoother;
+        smoother.num_neighbours = num_neighbours;
+        smoother.jet_degree_fitting = jet_degree_fitting;
+        smoother.sharpness_angle = sharpness_angle;
+        PointVectorStlVecPair pointsNormalsPair(smoother.smooth(*points));
+        points.reset();
+        std::cout << "Converting mesh STL vectors to numpy array tuple..." << std::endl;
+        coordinatesNormalsTuple = points_normal_pair_to_tuple(pointsNormalsPair);
+    }
+
+    return coordinatesNormalsTuple;
+}
+
+boost::python::object cgal_wlop_regularize(
+    boost::python::object coordinate,
+    const double select_percentage=10.0,
+    const double neighbour_radius=-1.0,
+    std::size_t number_of_iterations=32,
+    bool require_uniform_sampling=false,
+    std::size_t num_neighbours=18,
+    std::size_t jet_degree_fitting=2
+)
+{
+    std::cout << "Converting numpy array to STL vectors..." << std::endl;
+    PointStlVecPtr points(array_to_points(coordinate));
+
+    boost::python::object coordinatesNormalsTuple;
+    {
+        std::cout << "Regularizing point set..." << std::endl;
+        CgalWlopPointSetRegularizer regularizer;
+        regularizer.select_percentage = select_percentage;
+        regularizer.neighbour_radius = neighbour_radius;
+        regularizer.number_of_iterations = number_of_iterations;
+        regularizer.require_uniform_sampling = require_uniform_sampling;
+        regularizer.num_neighbours = num_neighbours;
+        regularizer.jet_degree_fitting = jet_degree_fitting;
+        PointVectorStlVecPair pointsNormalsPair(regularizer.regularize(*points));
+        points.reset();
+        std::cout << "Converting mesh STL vectors to numpy array tuple..." << std::endl;
+        coordinatesNormalsTuple = points_normal_pair_to_tuple(pointsNormalsPair);
+    }
+
+    return coordinatesNormalsTuple;
+}
+
 }
 
 BOOST_PYTHON_MODULE(_pcsr)
@@ -130,5 +227,21 @@ BOOST_PYTHON_MODULE(_pcsr)
         "_cgal_poisson_reconstruct",
         &pcsr::cgal_poisson_reconstruct
     );
+
+    boost::python::def(
+        "_cgal_wlop_regularize",
+        &pcsr::cgal_wlop_regularize
+    );
+
+    boost::python::def(
+        "_cgal_jet_smooth",
+        &pcsr::cgal_jet_smooth
+    );
+
+    boost::python::def(
+        "_cgal_bilateral_smooth",
+        &pcsr::cgal_bilateral_smooth
+    );
+
 }
 

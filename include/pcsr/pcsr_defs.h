@@ -19,6 +19,7 @@ namespace pcsr
     typedef std::vector<TriFace> TriFaceStlVec;
     typedef std::shared_ptr<TriFaceStlVec> TriFaceStlVecPtr;
 
+    typedef std::pair<PointStlVecPtr,VectorStlVecPtr> PointVectorStlVecPair;
     typedef std::pair<PointStlVecPtr,TriFaceStlVecPtr> TriMeshPair;
 }
 
