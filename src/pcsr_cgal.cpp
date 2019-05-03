@@ -298,6 +298,82 @@ CgalWlopPointSetRegularizer::regularize(const PointStlVec & coordinate) const
 
 /* ========================================================================= */
 
+template <
+    typename PointInputIterator,
+    typename PointMap,
+    typename NormalMap,
+    typename PolygonMesh,
+    typename Tag = CGAL::Manifold_with_boundary_tag
+>
+bool
+poisson_surface_reconstruction_delaunay (
+    PointInputIterator begin,
+    PointInputIterator end,
+    PointMap point_map,
+    NormalMap normal_map,
+    PolygonMesh& output_mesh,
+    double spacing,
+    double sm_angle = 20.0,
+    double sm_radius = 30.0,
+    double sm_distance = 0.375,
+    bool smoother_hole_filling=false,
+    Tag tag = Tag()
+)
+{
+    typedef typename boost::property_traits<PointMap>::value_type Point;
+    typedef typename CGAL::Kernel_traits<Point>::Kernel Kernel;
+    typedef typename Kernel::Sphere_3 Sphere;
+
+    typedef CGAL::Poisson_reconstruction_function<Kernel> Poisson_reconstruction_function;
+    typedef CGAL::Surface_mesh_default_triangulation_3 STr;
+    typedef CGAL::Surface_mesh_complex_2_in_triangulation_3<STr> C2t3;
+    typedef CGAL::Implicit_surface_3<Kernel, Poisson_reconstruction_function> Surface_3;
+
+    typedef CGAL::Eigen_solver_traits<Eigen::ConjugateGradient<CGAL::Eigen_sparse_symmetric_matrix<double>::EigenType> > Solver;
+
+    Poisson_reconstruction_function function(begin, end, point_map, normal_map);
+    if ( ! function.compute_implicit_function(Solver(), smoother_hole_filling) )
+        return false;
+
+    Point inner_point = function.get_inner_point();
+    Sphere bsphere = function.bounding_sphere();
+    double radius = std::sqrt(bsphere.squared_radius());
+
+    double sm_sphere_radius = 5.0 * radius;
+    double sm_dichotomy_error = sm_distance * spacing / 1000.0;
+
+    Surface_3
+        surface(
+            function,
+            Sphere (inner_point, sm_sphere_radius * sm_sphere_radius),
+            sm_dichotomy_error / sm_sphere_radius
+        );
+
+    CGAL::Surface_mesh_default_criteria_3<STr>
+        criteria (
+            sm_angle,
+            sm_radius * spacing,
+            sm_distance * spacing
+        );
+
+    STr tr;
+    C2t3 c2t3(tr);
+
+    CGAL::make_surface_mesh(
+        c2t3,
+        surface,
+        criteria,
+        tag
+    );
+
+    if(tr.number_of_vertices() == 0)
+        return false;
+
+    CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, output_mesh);
+
+    return true;
+}
+
 CgalPoissonSurfaceReconstructor::PolyhedronPtr
 CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points) const
 {
@@ -313,7 +389,7 @@ CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points)
     double  sm_radius = 20.0;
     double  sm_distance = 0.25;
     if (
-        CGAL::poisson_surface_reconstruction_delaunay(
+        poisson_surface_reconstruction_delaunay(
             points.begin(), points.end(),
             CGAL::First_of_pair_property_map<Pwn>(),
             CGAL::Second_of_pair_property_map<Pwn>(),
@@ -322,6 +398,7 @@ CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points)
             sm_angle,
             sm_radius,
             sm_distance,
+            true,
             CGAL::Non_manifold_tag()
         )
     )
