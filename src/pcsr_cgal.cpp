@@ -10,6 +10,7 @@
 #include <CGAL/wlop_simplify_and_regularize_point_set.h>
 
 #include <vector>
+#include <stdexcept>
 #include <fstream>
 #include <iostream>
 // types
@@ -328,7 +329,9 @@ CgalPoissonSurfaceReconstructor::reconstructPolyhedron(const PwnStlVec & points)
     }
     else
     {
-
+        throw std::runtime_error(
+            "CGAL::poisson_surface_reconstruction_delaunay failed to converge."
+        );
     }
     return meshPtr;
 }
