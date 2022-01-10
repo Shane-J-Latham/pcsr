@@ -2,6 +2,7 @@
 #ifndef PCSR_DEFS_H
 #define PCSR_DEFS_H
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <array>
