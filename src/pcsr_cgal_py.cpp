@@ -219,7 +219,7 @@ boost::python::object cgal_wlop_regularize(
 
 }
 
-BOOST_PYTHON_MODULE(_pcsr)
+BOOST_PYTHON_MODULE(_pcsr_cgal)
 {
     pcsr::bpnp::initialize();
 

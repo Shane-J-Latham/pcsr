@@ -1,7 +1,7 @@
 """
 Point Cloud Surface Reconstruction (PCSR).
 """
-from . import _pcsr
+
 
 def cgal_jet_smooth(
     points,
@@ -29,13 +29,15 @@ def cgal_jet_smooth(
        a :samp:`(S, 3)` shaped array of point coordinates
        and :samp:`normals` is a :samp:`(S, 3)` shaped array of oriented normals.
     """
+    from . import _pcsr_cgal
     return \
-        _pcsr._cgal_jet_smooth(
+        _pcsr_cgal._cgal_jet_smooth(
             points,
             int(num_neighbours),
             int(jet_degree_fitting),
             int(degree_monge)
         )
+
 
 def cgal_bilateral_smooth(
     points,
@@ -64,13 +66,15 @@ def cgal_bilateral_smooth(
        a :samp:`(S, 3)` shaped array of point coordinates
        and :samp:`normals` is a :samp:`(S, 3)` shaped array of oriented normals.
     """
+    from . import _pcsr_cgal
     return \
-        _pcsr._cgal_bilateral_smooth(
+        _pcsr_cgal._cgal_bilateral_smooth(
             points,
             int(num_neighbours),
             float(sharpness_angle),
             int(jet_degree_fitting)
         )
+
 
 def cgal_wlop_regularize(
     points,
@@ -107,8 +111,9 @@ def cgal_wlop_regularize(
        a :samp:`(S, 3)` shaped array of point coordinates
        and :samp:`normals` is a :samp:`(S, 3)` shaped array of oriented normals.
     """
+    from . import _pcsr_cgal
     return \
-        _pcsr._cgal_wlop_regularize(
+        _pcsr_cgal._cgal_wlop_regularize(
             points,
             float(select_percentage),
             float(neighbour_radius),
@@ -139,8 +144,9 @@ def cgal_poisson_reconstruct(
        vertices :samp:`vertices[faces[f][0]]`, :samp:`vertices[faces[f][1]]`
        and :samp:`vertices[faces[f][2]]`.
     """
+    from . import _pcsr_cgal
     return \
-        _pcsr._cgal_poisson_reconstruct(
+        _pcsr_cgal._cgal_poisson_reconstruct(
             points,
             normals
         )
