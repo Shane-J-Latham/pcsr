@@ -1,6 +1,9 @@
 """
 Point Cloud Surface Reconstruction (PCSR).
 """
+from . import _version
+
+__version__ = _version.get_versions()['version']
 
 
 def cgal_jet_smooth(
@@ -150,3 +153,4 @@ def cgal_poisson_reconstruct(
             points,
             normals
         )
+

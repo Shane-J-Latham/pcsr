@@ -1,6 +1,8 @@
 PROJECT(pcsr)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.11.0)
+
+FIND_PACKAGE(PythonExtensions REQUIRED)
 
 # Enable CTest testing ('make test' target for makefile generator).
 ENABLE_TESTING()
