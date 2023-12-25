@@ -32,7 +32,6 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install cython scikit-build wheel 'versioneer[toml]' flake8 ruff pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        python -m pip install --user --no-deps --no-build-isolation 'git+https://github.com/AppliedMathematicsANU/pyemblite.git#egg=pyemblite'
         CPATH=/usr/include/eigen3 python -m pip install --user --no-deps --no-build-isolation .
     - name: Lint with ruff and flake8
       run: |
