@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import numpy as _np
 import unittest as _unittest
 
+
 have_trimesh = False
 try:
     import trimesh as _trimesh
@@ -12,19 +13,21 @@ try:
 except Exception:
     pass
 
+
 def export_point_cloud(
     file_name,
     point_cloud,
-    exclude_fields=[],
+    exclude_fields=None,
     convert_zyx_to_xyz=False,
     logger=None
 ):
     """
     """
-    import copy
     import vtk
     from vtk.util.numpy_support import numpy_to_vtk
 
+    if exclude_fields is None:
+        exclude_fields = []
     if logger is None:
         import logging
         logger = logging.getLogger(str(__name__ + "." + "export_point_cloud"))
@@ -73,6 +76,7 @@ def export_point_cloud(
     )
     del writer, points, np_points, vtk_ug
 
+
 class PointSetTest(_unittest.TestCase):
 
     """
@@ -103,7 +107,6 @@ class PointSetTest(_unittest.TestCase):
                 from trimesh.exchange.export import export_mesh
             export_mesh(mesh, file_name)
 
-
     def setUp(self):
         """
         """
@@ -121,6 +124,7 @@ class PointSetTest(_unittest.TestCase):
             self.cow_mesh.apply_scale(2.0 / cow_radius)
 
             self.unit_cube_mesh = copy.deepcopy(models.unit_cube())
+
 
 class DenoisePointSetTest(PointSetTest):
     """
@@ -142,6 +146,7 @@ class DenoisePointSetTest(PointSetTest):
         self.export_point_set("mesh_points_noise.vtu", points)
 
         return mesh, points
+
 
 class CgalJetSmoothTest(DenoisePointSetTest):
 
@@ -180,6 +185,7 @@ class CgalJetSmoothTest(DenoisePointSetTest):
         self.assertTrue(
             _np.allclose(0, d, atol=0.25)
         )
+
 
 class CgalBilateralSmoothTest(DenoisePointSetTest):
 
@@ -221,6 +227,7 @@ class CgalBilateralSmoothTest(DenoisePointSetTest):
             _np.allclose(0, d, atol=0.25)
         )
 
+
 class CgalWlopRegularizationTest(DenoisePointSetTest):
 
     """
@@ -258,6 +265,7 @@ class CgalWlopRegularizationTest(DenoisePointSetTest):
         self.assertTrue(
             _np.allclose(0, d, atol=0.25)
         )
+
 
 class CgalPoissonSurfaceReconTest(PointSetTest):
 
@@ -300,10 +308,11 @@ class CgalPoissonSurfaceReconTest(PointSetTest):
         print("faces=\n%s" % faces)
         recon_mesh = _trimesh.Trimesh(vertices=vertices, faces=faces)
         # self.export_mesh("mesh_recon.ply", recon_mesh)
-        c, d, fidx2 = closest_point(mesh, vertices)
+        c, d, fidx2 = closest_point(recon_mesh, vertices)
         self.assertTrue(
             _np.allclose(0, d, atol=0.05)
         )
+
 
 __all__ = [s for s in dir() if not s.startswith('_')]
 

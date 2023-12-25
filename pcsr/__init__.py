@@ -133,7 +133,7 @@ def cgal_poisson_reconstruct(
 ):
     """
     Wrapper for CGAL::poisson_surface_reconstruction_delaunay point set surface reconstruction.
-    
+
     :type points: :obj:`numpy.ndarray`
     :param points: :obj:`numpy.ndarray` A :samp:`(N, 3)` shaped array of 3D coordinates.
     :type normals: :obj:`numpy.ndarray`
@@ -153,4 +153,3 @@ def cgal_poisson_reconstruct(
             points,
             normals
         )
-
