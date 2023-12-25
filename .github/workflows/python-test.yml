@@ -19,9 +19,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     # - uses: awalsh128/cache-apt-pkgs-action@latest
-      with:
-        packages: libeigen3-dev libboost-all-dev libcgal-dev
-        version: 1.0
+    #  with:
+    #    packages: libeigen3-dev libboost-all-dev libcgal-dev
+    #    version: 1.0
+    - name: Install deps
+      run: sudo apt-get install libeigen3-dev libboost-all-dev libcgal-dev    
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
