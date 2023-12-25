@@ -32,8 +32,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install cython scikit-build wheel 'versioneer[toml]' flake8 ruff pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        export SKBUILD_CMAKE_VERBOSE=true
-        export SKBUILD_CMAKE_DEFINE="CMAKE_PATH_PATH=/usr/lib/x86_64-linux-gnu/cmake/CGAL"
+        export SKBUILD_CMAKE_VERBOSE=ON
+        export SKBUILD_CMAKE_DEFINE="CMAKE_PATH_PATH=/usr/lib/x86_64-linux-gnu/cmake/CGAL;CMAKE_VERBOSE_MAKEFILE=ON"
         export CPATH="/usr/include"
         python -m pip install --user --no-deps --no-build-isolation .
     - name: Lint with ruff and flake8
