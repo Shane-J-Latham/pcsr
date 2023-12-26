@@ -29,7 +29,18 @@ or from source directory:
 
 .. code-block:: console
 
-   $ python -m pip install --prefix=/path/to/install/root --no-deps --no-build-isolation .
+   $ python -m pip install --prefix=/path/to/install/root .
+
+Install using `vcpkg <https://github.com/microsoft/vcpkg>`_ to manage non-python dependencies:
+
+.. code-block:: console
+
+   $ git clone https://github.com/microsoft/vcpkg
+   $ .\vcpkg\bootstrap-vcpkg.sh
+   $ export VCPKG_ROOT=$(realpath ./vcpkg)
+   $ git clone git@github.com:Shane-J-Latham/pcsr.git
+   $ cd pcsr
+   $ python -m pip install --prefix=/path/to/install/root .
 
 
 Requirements

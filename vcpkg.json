@@ -1,0 +1,8 @@
+{
+    "dependencies": [
+        "libspatialindex",
+        "boost-python",
+        "eigen3",
+        "cgal"
+    ]
+}

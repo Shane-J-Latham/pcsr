@@ -9,10 +9,5 @@ setup(
     zip_safe=False,
     packages=["pcsr",],
     package_data={'pcsr': [os.path.join("models", "*.obj")]},
-    install_requires=[
-        "numpy>=1.7",
-    ],
-    setup_requires=[
-        "numpy>=1.7"
-    ]
+    cmake_with_sdist=True
 )
