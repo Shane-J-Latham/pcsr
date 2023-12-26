@@ -45,5 +45,5 @@ jobs:
       run: |
         cd ~
         python -m pcsr.tests -fv
-        pytest $(python -c 'import os; import pcsr; print(os.path.dirname(pcsr.__file__))')
+        # pytest $(python -c 'import os; import pcsr; print(os.path.dirname(pcsr.__file__))')
 
