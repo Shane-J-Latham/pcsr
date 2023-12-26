@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install ubuntu dependencies
-      run: sudo apt-get install libeigen3-dev libboost-all-dev libcgal-dev    
+      run: sudo apt-get install libspatialindex-dev libeigen3-dev libboost-all-dev libcgal-dev
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
