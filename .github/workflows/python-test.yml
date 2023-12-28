@@ -30,9 +30,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install cython scikit-build wheel 'versioneer[toml]' flake8 ruff pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        export SKBUILD_CMAKE_VERBOSE=ON
-        export SKBUILD_CMAKE_DEFINE="CMAKE_PATH_PATH=/usr/lib/x86_64-linux-gnu/cmake/CGAL;CMAKE_VERBOSE_MAKEFILE=ON"
-        python -m pip install --user --no-deps --no-build-isolation .
+        python -m pip install --user --no-build-isolation .
     - name: Lint with ruff and flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -40,7 +38,7 @@ jobs:
         flake8 ./pcsr --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 ./pcsr --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+    - name: Test
       shell: bash
       run: |
         cd ~
