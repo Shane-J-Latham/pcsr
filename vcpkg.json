@@ -1,7 +1,7 @@
 {
     "dependencies": [
         "libspatialindex",
-        "boost-python",
+        "pybind11",
         "eigen3",
         "cgal"
     ]
