@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-import os as _os
-import pkg_resources as _pkg_resources
-
-__doc__ = \
-    """
+"""
 Instances of meshes.
 
 .. rubric:: Models
@@ -11,8 +6,15 @@ Instances of meshes.
 .. autosummary::
    :toctree: generated/
 
+   cow - A cow mesh model.
+   unit_cube - A unit-cube mesh model.
+
 
 """
+
+from __future__ import absolute_import
+import os as _os
+import pkg_resources as _pkg_resources
 
 
 class ModelLoader(object):
@@ -84,30 +86,10 @@ class ModelLoader(object):
         return self.__repr__()
 
 
-def append_model_loader_attr_to_doc_string(doc_string):
-    """
-    Finds attributes of this module which are of instance :obj:`ModelLoader`
-    and appends an entry to the :samp:`{doc_string}` string.
-
-    :type doc_string: :obj:`str`
-    :param doc_string: Doc string which gets :obj:`ModelLoader` attributes appended.
-    :rtype: :obj:`str`
-    :return: The :samp:`{doc_string}` with autosummary attributes appended.
-    """
-    import sys
-    this_module = sys.modules[__name__]
-    for attr_name in dir(this_module):
-        if isinstance(getattr(this_module, attr_name), ModelLoader):
-            doc_string = doc_string + ("   %s - A model.\n" % attr_name)
-    return doc_string
-
-
 #: Returns model of a cow.
 cow = ModelLoader("cow.obj", "obj")
 
 #: Returns model of a unit cube.
 unit_cube = ModelLoader("unit_cube.obj", "obj")
-
-__doc__ = append_model_loader_attr_to_doc_string(__doc__)
 
 __all__ = [s for s in dir() if not s.startswith('_')]
