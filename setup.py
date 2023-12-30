@@ -1,4 +1,3 @@
-import os
 from skbuild import setup
 import versioneer
 
@@ -8,6 +7,6 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     zip_safe=False,
     packages=["pcsr",],
-    package_data={'pcsr': [os.path.join("models", "*.obj")]},
+    package_data={'pcsr': ["models/*.obj"]},
     cmake_with_sdist=True
 )
