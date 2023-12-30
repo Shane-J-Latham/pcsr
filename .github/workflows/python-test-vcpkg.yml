@@ -73,7 +73,8 @@ jobs:
         shell: bash
         run: |
           cd ~
-          python -c 'import pcsr.models as models; print(dir(models))'
+          echo $(pwd)
+          python -c 'import pcsr.models as models; print(f"models.__file__={models.__file__}"); print(dir(models))'
 
       - name: Test
         shell: bash
