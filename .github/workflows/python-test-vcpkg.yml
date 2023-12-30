@@ -69,11 +69,13 @@ jobs:
           VCPKG_ROOT: ${{ runner.workspace }}/vcpkg
         run: python -m pip install --user ${{ github.workspace }}
 
-      - name: dir(pcsr.models)
+      - name: Debug pcsr.models non-existent cow attribute
         shell: bash
         run: |
           cd ~
           echo $(pwd)
+          ls
+          python -c 'import pcsr; print(f"pcsr.__file__={pcsr.__file__}"); print(dir(pcsr))'
           python -c 'import pcsr.models as models; print(f"models.__file__={models.__file__}"); print(dir(models))'
 
       - name: Test
