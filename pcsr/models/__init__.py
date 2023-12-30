@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os as _os
+import pkg_resources as _pkg_resources
 
 __doc__ = \
     """
@@ -32,7 +33,7 @@ class ModelLoader(object):
         """
         Name of directory from which file is loaded.
         """
-        return _os.path.split(__file__)[0]
+        return "models"
 
     @property
     def file_name(self):
@@ -52,13 +53,17 @@ class ModelLoader(object):
         """
         Returns the mesh loaded from the :attr:`file_name` file.
         """
-        import trimesh
+        from trimesh import load_mesh
 
-        return \
-            trimesh.load_mesh(
-                _os.path.join(self.model_dir, self.file_name),
-                self.file_type
-            )
+        with \
+            _pkg_resources.resource_stream(
+                "pcsr",
+                self.model_dir + "/" + self.file_name
+            ) as fp:  # noqa: E125
+
+            mesh = load_mesh(fp, self.file_type)
+
+        return mesh
 
     def __repr__(self):
         """
