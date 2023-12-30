@@ -7,6 +7,6 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     zip_safe=False,
     packages=["pcsr",],
-    package_data={'pcsr': ["models/*.obj"]},
+    package_data={'pcsr.models': ["data/*.obj"]},
     cmake_with_sdist=True
 )

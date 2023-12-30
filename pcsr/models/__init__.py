@@ -35,7 +35,7 @@ class ModelLoader(object):
         """
         Name of directory from which file is loaded.
         """
-        return "models"
+        return "data"
 
     @property
     def file_name(self):
@@ -59,7 +59,7 @@ class ModelLoader(object):
 
         with \
             _pkg_resources.resource_stream(
-                "pcsr",
+                "pcsr.models",
                 self.model_dir + "/" + self.file_name
             ) as fp:  # noqa: E125
 
