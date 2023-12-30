@@ -75,6 +75,7 @@ jobs:
           cd ~
           echo $(pwd)
           ls
+          python -c 'import os; import pcsr; print(os.listdir(os.path.dirname(pcsr.__file__)))'
           python -c 'import os; import pcsr; print(os.listdir(os.path.join(os.path.dirname(pcsr.__file__), "models")))'
           python -c 'import pcsr; print(f"pcsr.__file__={pcsr.__file__}"); print(dir(pcsr))'
           python -c 'import pcsr.models as models; print(f"models.__file__={models.__file__}"); print(dir(models))'
