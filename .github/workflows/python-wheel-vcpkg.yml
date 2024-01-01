@@ -42,8 +42,9 @@ jobs:
         id: runvcpkg
 
       - name: Prints output of run-vcpkg's action.
-        run: echo "VCPKG_ROOT=${VCPKG_ROOT}"
-        run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
+        run: |
+          echo "VCPKG_ROOT=${VCPKG_ROOT}"
+          echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -62,8 +63,9 @@ jobs:
 
       - name: Build wheels
         shell: bash
-        run: echo "VCPKG_ROOT=${VCPKG_ROOT}"
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          echo "VCPKG_ROOT=${VCPKG_ROOT}"
+          python -m cibuildwheel --output-dir wheelhouse
         env:
           # CIBW_ENVIRONMENT: "VCPKG_ROOT=${{ runner.workspace }}/vcpkg"
           # vcpkg does not support i686 nor aarch64
