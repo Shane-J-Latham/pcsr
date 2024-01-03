@@ -14,8 +14,7 @@ Instances of meshes.
 
 from __future__ import absolute_import
 import os as _os
-import pkg_resources as _pkg_resources
-
+from importlib import resources as _resources
 
 class ModelLoader(object):
     """
@@ -58,10 +57,9 @@ class ModelLoader(object):
         from trimesh import load_mesh
 
         with \
-            _pkg_resources.resource_stream(
-                "pcsr",
+            _resources.files("pcsr").joinpath(
                 self.model_dir + "/" + self.file_name
-            ) as fp:  # noqa: E125
+            ).open("rb") as fp:  # noqa: E125
 
             mesh = load_mesh(fp, self.file_type)
 
