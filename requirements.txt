@@ -1,5 +1,5 @@
 numpy>=1.14.5
 scipy
-vtk<9.3
+vtk
 rtree
 trimesh
