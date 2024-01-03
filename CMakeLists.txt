@@ -1,5 +1,5 @@
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.21.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 
 IF (NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
@@ -19,15 +19,34 @@ elseif(DEFINED ENV{VCPKG_ROOT})
     "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
     CACHE FILEPATH ""
   )
+elseif(CMAKE_FETCH_VCPKG OR DEFINED ENV{CMAKE_FETCH_VCPKG})
+  message(STATUS "Fetching vcpkg")
+  include(FetchContent)
+  FetchContent_Declare(vcpkg
+    GIT_REPOSITORY https://github.com/microsoft/vcpkg/
+    GIT_TAG 2023.12.12
+  )
+  FetchContent_MakeAvailable(vcpkg)
+  set(CMAKE_TOOLCHAIN_FILE
+    "${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake"
+    CACHE FILEPATH ""
+  )
+  message(STATUS "Fetching vcpkg -- done")
 else()
   message(STATUS "No VCPKG_ROOT or CMAKE_TOOLCHAIN_FILE defined, skipping vcpkg use.")
 endif()
 
 PROJECT(pcsr)
 
-FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
+MESSAGE(STATUS "Finding Python...")
+FIND_PACKAGE(Python COMPONENTS Interpreter Development.Module REQUIRED)
+MESSAGE(STATUS "Finding pybind11...")
 FIND_PACKAGE(pybind11 CONFIG REQUIRED)
+MESSAGE(STATUS "Finding PythonExtensions...")
+SET(Python_ADDITIONAL_VERSIONS "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
 FIND_PACKAGE(PythonExtensions REQUIRED)
+
+FIND_PACKAGE(ZLIB)
 
 # Enable CTest testing ('make test' target for makefile generator).
 ENABLE_TESTING()
@@ -41,8 +60,6 @@ SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -g")
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
-FIND_PACKAGE(PythonInterp)
-FIND_PACKAGE(PythonLibs ${PYTHON_VERSION_STRING})
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIR})
 
 SET(
