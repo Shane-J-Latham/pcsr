@@ -1,12 +1,23 @@
 [build-system]
 requires = [
-  "setuptools>=66.1",
+  "setuptools>=42",
   "versioneer[toml]",
   "scikit-build",
   "cmake",
   "ninja"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pcsr"
+dependencies = [
+    "numpy>=1.14.5",
+    "scipy",
+    "vtk<9.3",
+    "rtree",
+    "trimesh"
+]
+dynamic = ["version"]
 
 [tool.versioneer]
 VCS = "git"
@@ -16,6 +27,3 @@ versionfile_build = "pcsr/_version.py"
 tag_prefix = "v"
 parentdir_prefix = "pcsr-"
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-# optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
