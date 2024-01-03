@@ -139,7 +139,7 @@ class DenoisePointSetTest(PointSetTest):
         self.export_mesh("mesh.ply", mesh)
         g_sigma = 0.035
         points, fidx = sample_surface_even(mesh, 50000)
-        normals = normals = mesh.face_normals[fidx]
+        normals = mesh.face_normals[fidx]
 
         self.export_point_set("mesh_points.vtu", points)
         points += _np.random.normal(loc=0.0, scale=g_sigma, size=(points.shape[0], 1)) * normals
