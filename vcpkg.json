@@ -1,6 +1,5 @@
 {
     "dependencies": [
-        "libspatialindex",
         "pybind11",
         "eigen3",
         "cgal"
