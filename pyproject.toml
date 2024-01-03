@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools>=42",
+  "setuptools>=66.1",
   "versioneer[toml]",
   "scikit-build",
   "cmake",
@@ -15,3 +15,7 @@ versionfile_source = "pcsr/_version.py"
 versionfile_build = "pcsr/_version.py"
 tag_prefix = "v"
 parentdir_prefix = "pcsr-"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+# optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
