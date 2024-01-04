@@ -19,12 +19,8 @@ IF ( CGAL_FOUND )
     ADD_LIBRARY(_pcsr_cgal MODULE ${pcsr_cgal_SRCS})
     TARGET_LINK_LIBRARIES(
       _pcsr_cgal
-      ${CGAL_LIBRARIES}
-      ${BOOST_LIBRARIES}
+      CGAL::CGAL
       ${PYTHON_LIBRARIES}
-      ${MPFR_LIBRARIES}
-      ${GMP_LIBRARIES}
-      ${TBB_LIBRARIES}
     )
     PYTHON_EXTENSION_MODULE(_pcsr_cgal)
 
@@ -62,7 +58,6 @@ IF ( PCL_FOUND )
     TARGET_LINK_LIBRARIES(
       _pcsr_pcl
       ${PCSR_PCL_LIBRARIES}
-      ${BOOST_LIBRARIES}
       ${PYTHON_LIBRARIES}
     )
     PYTHON_EXTENSION_MODULE(_pcsr_pcl)
