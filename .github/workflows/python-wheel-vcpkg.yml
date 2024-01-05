@@ -131,7 +131,7 @@ jobs:
 
   release:
     name: Make a Release
-    needs: build_wheels
+    needs: [build_sdist, build_wheels]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
