@@ -130,7 +130,7 @@ jobs:
 
   release:
     name: Make a Release
-    needs: [build_sdist, build_wheels]
+    needs: build_wheels
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -138,9 +138,17 @@ jobs:
       - name: Download python wheels
         uses: actions/download-artifact@v4
         with:
-          pattern: ./[sw][dh][ie][se]*/*
+          name: python-wheels
           path: ./release_artifacts/
-      
+          merge_multiple: true
+
+      - name: Download python sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: python-sdist
+          path: ./release_artifacts/
+          merge_multiple: true
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
