@@ -126,7 +126,7 @@ jobs:
       - name: Upload python sdist
         uses: actions/upload-artifact@v4
         with:
-          name: python-sdist
+          name: cibw-sdist
           path: ./dist/*
 
   release:
@@ -136,26 +136,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Download python wheels
+      - name: Download python sdist and wheels
         uses: actions/download-artifact@v4
         with:
-          name: python-wheels-windows-latest
+          pattern: cibw-*
           path: ./release_artifacts/
           merge-multiple: true
-
-      - name: Download python wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: python-wheels-macos-latest
-          path: ./release_artifacts/
-          merge-multiple: true
-
-      - name: Download python sdist
-        uses: actions/download-artifact@v4
-        with:
-          name: python-sdist
-          path: ./release_artifacts/
-          merge_multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v1
