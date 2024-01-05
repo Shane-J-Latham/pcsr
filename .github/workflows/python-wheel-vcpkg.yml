@@ -3,7 +3,8 @@ name: Python Wheels (vcpkg build)
 on:
   workflow_dispatch:
   push:
-  pull_request:
+    tags:
+      - "v*.*.*"
 
 jobs:
 
@@ -126,3 +127,21 @@ jobs:
         with:
           name: python-sdist
           path: ./dist/*
+
+  release:
+    name: Make a Release
+    needs: [build_sdist, build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download python wheels
+        uses: actions/download-artifact@v3
+        with:
+          pattern: ./[sw][dh][ie][se]*/*
+          path: ./release_artifacts/
+      
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./release_artifacts/*
