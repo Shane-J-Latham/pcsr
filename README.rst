@@ -51,7 +51,6 @@ Requires:
 - python-3 version `>= 3.8`,
 - `numpy <https://www.numpy.org/>`_ version `>= 1.14.5`,
 - `CGAL <https://cgal.org/>`_ version `>= 3.5`,
-- `PCL <https://pointclouds.org/>`_ version `>= 1.8.1`,
 - `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_
 
 Testing
