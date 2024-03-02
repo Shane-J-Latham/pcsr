@@ -17,6 +17,7 @@ import os as _os
 import sys as _sys
 from importlib import resources as _resources
 
+
 class ModelLoader(object):
     """
     Callable which loads a specified mesh model from file.
